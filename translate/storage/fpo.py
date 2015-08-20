@@ -23,7 +23,7 @@
 This implementation assumes that cpo is working. This should not be used
 directly, but can be used once cpo has been established to work."""
 
-#TODO:
+# TODO:
 # - handle headerless PO files better
 # - previous msgid and msgctxt
 # - accept only unicodes everywhere
@@ -99,7 +99,7 @@ class pounit(pocommon.pounit):
         elif isinstance(source, unicode):
             self._source = source
         else:
-            #unicode, list, dict
+            # unicode, list, dict
             self._source = multistring(source)
     source = property(getsource, setsource)
 
@@ -110,13 +110,13 @@ class pounit(pocommon.pounit):
     def settarget(self, target):
         """Sets the msgstr to the given (unescaped) value"""
         self._rich_target = None
-#        assert isinstance(target, unicode)
-#        target = data.forceunicode(target)
+        #        assert isinstance(target, unicode)
+        #        target = data.forceunicode(target)
         if self.hasplural():
             if isinstance(target, multistring):
                 self._target = target
             else:
-                #unicode, list, dict
+                # unicode, list, dict
                 self._target = multistring(target)
         elif isinstance(target, (dict, list)):
             if len(target) == 1:
@@ -210,7 +210,7 @@ class pounit(pocommon.pounit):
         """
 
         def mergelists(list1, list2, split=False):
-            #decode where necessary
+            # decode where necessary
             if unicode in [type(item) for item in list2] + [type(item) for item in list1]:
                 for position, item in enumerate(list1):
                     if isinstance(item, str):
@@ -219,7 +219,7 @@ class pounit(pocommon.pounit):
                     if isinstance(item, str):
                         list2[position] = item.decode("utf-8")
 
-            #Determine the newline style of list2
+            # Determine the newline style of list2
             lineend = ""
             if list2 and list2[0]:
                 for candidate in ["\n", "\r", "\n\r"]:
@@ -228,7 +228,7 @@ class pounit(pocommon.pounit):
                 if not lineend:
                     lineend = ""
 
-            #Split if directed to do so:
+            # Split if directed to do so:
             if split:
                 splitlist1 = []
                 splitlist2 = []
@@ -236,9 +236,9 @@ class pounit(pocommon.pounit):
                     splitlist1.extend(item.split())
                 for item in list2:
                     splitlist2.extend(item.split())
-                list1.extend([item for item in splitlist2 if not item in splitlist1])
+                list1.extend([item for item in splitlist2 if item not in splitlist1])
             else:
-                #Normal merge, but conform to list1 newline style
+                # Normal merge, but conform to list1 newline style
                 if list1 != list2:
                     for item in list2:
                         item = item.rstrip(lineend)
@@ -275,7 +275,7 @@ class pounit(pocommon.pounit):
                 self.markfuzzy()
 
     def isheader(self):
-        #TODO: fix up nicely
+        # TODO: fix up nicely
         return not self.getid() and len(self.target) > 0
 
     def isblank(self):
@@ -348,7 +348,7 @@ class pounit(pocommon.pounit):
         return: A list of the locations with '#: ' stripped
 
         """
-        #TODO: rename to .locations
+        # TODO: rename to .locations
         return self.sourcecomments
 
     def addlocation(self, location):
@@ -402,7 +402,7 @@ class pounit(pocommon.pounit):
         elif isinstance(unit, pocommon.pounit):
             newunit = cls(unit.source)
             newunit.target = unit.target
-            #context
+            # context
             newunit.msgidcomment = unit._extract_msgidcomments()
             if not newunit.msgidcomment:
                 newunit.setcontext(unit.getcontext())
@@ -448,7 +448,7 @@ class pofile(pocommon.pofile):
         charsetline = None
         headerstr = header.target
         for line in headerstr.split("\n"):
-            if not ":" in line:
+            if ":" not in line:
                 continue
             key, value = line.strip().split(":", 1)
             if key.strip() != "Content-Type":
@@ -488,7 +488,7 @@ class pofile(pocommon.pofile):
             if not unit.isblank():
                 self._cpo_store.addunit(cpo.pofile.UnitClass.buildfromunit(unit, self._encoding))
         if not self._cpo_store.header():
-            #only add a temporary header
+            # only add a temporary header
             self._cpo_store.makeheader(charset=self._encoding, encoding="8bit")
 
     def parse(self, input, duplicatestyle=None):
@@ -499,9 +499,9 @@ class pofile(pocommon.pofile):
             elif not getattr(self, 'filename', ''):
                 self.filename = ''
             tmp_header_added = False
-#            if isinstance(input, str) and '"Content-Type: text/plain; charset=' not in input[:200]:
-#                input = basic_header + input
-#                tmp_header_added = True
+            # if isinstance(input, str) and '"Content-Type: text/plain; charset=' not in input[:200]:
+            #     input = basic_header + input
+            #     tmp_header_added = True
             self.units = []
             self._cpo_store = cpo.pofile(input, noheader=True)
             self._build_self_from_cpo()
@@ -568,7 +568,7 @@ class pofile(pocommon.pofile):
         self._cpo_store = cpo.pofile(encoding=self._encoding, noheader=True)
         try:
             self._build_cpo_from_self()
-        except UnicodeEncodeError as e:
+        except UnicodeEncodeError:
             self._encoding = "utf-8"
             self.updateheader(add=True, Content_Type="text/plain; charset=UTF-8")
             self._build_cpo_from_self()

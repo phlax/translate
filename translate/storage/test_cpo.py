@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-
 from pytest import importorskip, mark, raises
 cpo = importorskip("not sys.platform.startswith('linux')")
 
 from translate.misc import wStringIO
 from translate.misc.multistring import multistring
-from translate.storage import test_po
+from translate.storage import po, test_po
 
 
 cpo = importorskip("translate.storage.cpo")
@@ -53,8 +51,9 @@ class TestCPOUnit(test_po.TestPOUnit):
         unit.target = multistring(["Boom", "Bome"])
         assert unit.target.strings == ["Boom", "Bome"]
         unit.target = "Boom"
-        # FIXME: currently assigning the target to the same as the first string won't change anything
-        # we need to verify that this is the desired behaviour...
+        # FIXME: currently assigning the target to the same as the first string
+        # won't change anything we need to verify that this is the desired
+        # behaviour...
         assert unit.target.strings[0] == "Boom"
         unit.target = "Een Boom"
         assert unit.target.strings == ["Een Boom"]
@@ -74,7 +73,10 @@ class TestCPOUnit(test_po.TestPOUnit):
         assert raises(ValueError, unit.getnotes, "devteam")
 
     def test_notes_withcomments(self):
-        """tests that when we add notes that look like comments that we treat them properly"""
+        """
+        tests that when we add notes that look like comments that we treat them
+        properly
+        """
         unit = self.UnitClass("File")
         unit.addnote("# Double commented comment")
         assert unit.getnotes() == "# Double commented comment"
@@ -98,7 +100,8 @@ class TestCPOFile(test_po.TestPOFile):
     @mark.xfail(reason="Were disabled during port of Pypo to cPO - they might work")
     def test_merge_duplicates_msgctxt(self):
         """checks that merging duplicates works for msgctxt"""
-        posource = '#: source1\nmsgid "test me"\nmsgstr ""\n\n#: source2\nmsgid "test me"\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid "test me"\nmsgstr ""\n\n'
+                    '#: source2\nmsgid "test me"\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("msgctxt")
         print(pofile)
@@ -109,7 +112,8 @@ class TestCPOFile(test_po.TestPOFile):
     @mark.xfail(reason="Were disabled during port of Pypo to cPO - they might work")
     def test_merge_blanks(self):
         """checks that merging adds msgid_comments to blanks"""
-        posource = '#: source1\nmsgid ""\nmsgstr ""\n\n#: source2\nmsgid ""\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid ""\nmsgstr ""\n\n'
+                    '#: source2\nmsgid ""\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("merge")
         assert len(pofile.units) == 2
@@ -121,7 +125,8 @@ class TestCPOFile(test_po.TestPOFile):
     @mark.xfail(reason="Were disabled during port of Pypo to cPO - they might work")
     def test_msgid_comment(self):
         """checks that when adding msgid_comments we place them on a newline"""
-        posource = '#: source0\nmsgid "Same"\nmsgstr ""\n\n#: source1\nmsgid "Same"\nmsgstr ""\n'
+        posource = ('#: source0\nmsgid "Same"\nmsgstr ""\n\n'
+                    '#: source1\nmsgid "Same"\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("msgid_comment")
         assert len(pofile.units) == 2
@@ -129,13 +134,16 @@ class TestCPOFile(test_po.TestPOFile):
         assert po.unquotefrompo(pofile.units[1].msgidcomments) == "_: source1\n"
         # Now lets check for formating
         for i in (0, 1):
-            expected = '''#: source%d\nmsgid ""\n"_: source%d\\n"\n"Same"\nmsgstr ""\n''' % (i, i)
+            expected = ('#: source%d\nmsgid ""\n"'
+                        '_: source%d\\n"\n"'
+                        'Same"\nmsgstr ""\n') % (i, i)
             assert pofile.units[i].__str__() == expected
 
     @mark.xfail(reason="Were disabled during port of Pypo to cPO - they might work")
     def test_keep_blanks(self):
         """checks that keeping keeps blanks and doesn't add msgid_comments"""
-        posource = '#: source1\nmsgid ""\nmsgstr ""\n\n#: source2\nmsgid ""\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid ""\nmsgstr ""\n\n'
+                    '#: source2\nmsgid ""\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("keep")
         assert len(pofile.units) == 2
@@ -146,7 +154,8 @@ class TestCPOFile(test_po.TestPOFile):
     def test_output_str_unicode(self):
         """checks that we can str(pofile) which is in unicode"""
         posource = u'''#: nb\nmsgid "Norwegian Bokm\xe5l"\nmsgstr ""\n'''
-        pofile = self.StoreClass(wStringIO.StringIO(posource.encode("UTF-8")), encoding="UTF-8")
+        pofile = self.StoreClass(wStringIO.StringIO(posource.encode("UTF-8")),
+                                 encoding="UTF-8")
         assert len(pofile.units) == 1
         print(str(pofile))
         thepo = pofile.units[0]
@@ -164,7 +173,8 @@ class TestCPOFile(test_po.TestPOFile):
 
     def test_posections(self):
         """checks the content of all the expected sections of a PO message"""
-        posource = '# other comment\n#. automatic comment\n#: source comment\n#, fuzzy\nmsgid "One"\nmsgstr "Een"\n'
+        posource = ('# other comment\n#. automatic comment\n'
+                    '#: source comment\n#, fuzzy\nmsgid "One"\nmsgstr "Een"\n')
         pofile = self.poparse(posource)
         print(pofile)
         assert len(pofile.units) == 1
@@ -172,7 +182,11 @@ class TestCPOFile(test_po.TestPOFile):
 
     def test_multiline_obsolete(self):
         """Tests for correct output of mulitline obsolete messages"""
-        posource = '#~ msgid ""\n#~ "Old thing\\n"\n#~ "Second old thing"\n#~ msgstr ""\n#~ "Ou ding\\n"\n#~ "Tweede ou ding"\n'
+        posource = ('#~ msgid ""\n#~ "Old thing\\n"\n'
+                    '#~ "Second old thing"\n'
+                    '#~ msgstr ""\n'
+                    '#~ "Ou ding\\n"\n'
+                    '#~ "Tweede ou ding"\n')
         pofile = self.poparse(posource)
         print("Source:\n%s" % posource)
         print("Output:\n%s" % str(pofile))

@@ -69,10 +69,10 @@ class TestPOUnit(test_base.TestTranslationUnit):
     def test_adding_empty_note(self):
         unit = self.UnitClass("bla")
         print(str(unit))
-        assert not '#' in str(unit)
+        assert '#' not in str(unit)
         for empty_string in ["", " ", "\t", "\n"]:
             unit.addnote(empty_string)
-            assert not '#' in str(unit)
+            assert '#' not in str(unit)
 
     def test_markreview(self):
         """Tests if we can mark the unit to need review."""
@@ -434,8 +434,8 @@ msgstr "tweede"
         pofile = self.poparse(posource)
         assert len(pofile.units) == 2
         # FIXME we still need to handle this correctly for proper Uniforum support if required
-        #assert pofile.units[0].getlocations() == "File: somefile, line: 300"
-        #assert pofile.units[1].getlocations() == "File: anotherfile, line: 200"
+        # assert pofile.units[0].getlocations() == "File: somefile, line: 300"
+        # assert pofile.units[1].getlocations() == "File: anotherfile, line: 200"
 
     def test_obsolete(self):
         """Tests that obsolete messages work"""
@@ -546,8 +546,11 @@ msgstr[1] "Koeie"
 
     def test_makeobsolete_msgctxt(self):
         """Tests making a unit with msgctxt obsolete"""
-        posource = '#: test.c\nmsgctxt "Context"\nmsgid "test"\nmsgstr "rest"\n'
-        poexpected = '#~ msgctxt "Context"\n#~ msgid "test"\n#~ msgstr "rest"\n'
+        posource = ('#: test.c\n'
+                    'msgctxt "Context"\n'
+                    'msgid "test"\nmsgstr "rest"\n')
+        poexpected = ('#~ msgctxt "Context"\n'
+                      '#~ msgid "test"\n#~ msgstr "rest"\n')
         pofile = self.poparse(posource)
         print(pofile)
         unit = pofile.units[0]
@@ -561,7 +564,10 @@ msgstr[1] "Koeie"
 
     def test_makeobsolete_msgidcomments(self):
         """Tests making a unit with msgidcomments obsolete"""
-        posource = '#: first.c\nmsgid ""\n"_: first.c\\n"\n"test"\nmsgstr "rest"\n\n#: second.c\nmsgid ""\n"_: second.c\\n"\n"test"\nmsgstr "rest"'
+        posource = ('#: first.c\nmsgid ""\n"_: first.c\\n"\n"test"\n'
+                    'msgstr "rest"\n\n'
+                    '#: second.c\nmsgid ""\n"_: second.c\\n"\n"test"\n'
+                    'msgstr "rest"')
         poexpected = '#~ msgid ""\n#~ "_: first.c\\n"\n#~ "test"\n#~ msgstr "rest"\n'
         print("Source:\n%s" % posource)
         print("Expected:\n%s" % poexpected)
@@ -575,7 +581,12 @@ msgstr[1] "Koeie"
 
     def test_multiline_obsolete(self):
         """Tests for correct output of mulitline obsolete messages"""
-        posource = '#~ msgid ""\n#~ "Old thing\\n"\n#~ "Second old thing"\n#~ msgstr ""\n#~ "Ou ding\\n"\n#~ "Tweede ou ding"\n'
+        posource = ('#~ msgid ""\n'
+                    '#~ "Old thing\\n"\n'
+                    '#~ "Second old thing"\n'
+                    '#~ msgstr ""\n'
+                    '#~ "Ou ding\\n"\n'
+                    '#~ "Tweede ou ding"\n')
         pofile = self.poparse(posource)
         assert pofile.isempty()
         assert len(pofile.units) == 1
@@ -587,7 +598,8 @@ msgstr[1] "Koeie"
 
     def test_merge_duplicates(self):
         """checks that merging duplicates works"""
-        posource = '#: source1\nmsgid "test me"\nmsgstr ""\n\n#: source2\nmsgid "test me"\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid "test me"\nmsgstr ""\n\n'
+                    '#: source2\nmsgid "test me"\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("merge")
         assert len(pofile.units) == 1
@@ -747,7 +759,8 @@ msgstr[0] ""
         # commented out for conformance to gettext.
 #        assert pofile.units[4].getid() == "tree\0trees"
 
-    def test_non_ascii_header_comments(self):
+    # method with same name below?
+    def __test_non_ascii_header_comments(self):
         posource = r'''
 # Tëśt þis.
 # Hé Há Hó.
@@ -785,7 +798,6 @@ msgstr "b"
         header_dict = pofile.parseheader()
         assert u"Last-Translator" in header_dict
         assert header_dict[u"Last-Translator"] == u"Tránslátór"
-
 
         # let's test the same with latin-1:
         posource = r'''
@@ -965,7 +977,7 @@ msgstr ""
 '''
         assert self.poreflow(posource) == posource_wanted
 
-        posource =r'''#: 10
+        posource = r'''#: 10
 msgid "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
 msgstr "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
 '''

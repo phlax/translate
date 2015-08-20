@@ -50,7 +50,7 @@ def unquote_plus(text):
         if isinstance(text, unicode):
             text = text.encode('utf-8')
         return parse.unquote_plus(text).decode('utf-8')
-    except UnicodeEncodeError as e:
+    except UnicodeEncodeError:
         # for some reason there is a non-ascii character here. Let's assume it
         # is already unicode (because of originally decoding the file)
         return text
@@ -90,7 +90,10 @@ class pounit(base.TranslationUnit):
         return errordict
 
     def markreviewneeded(self, needsreview=True, explanation=None):
-        """Marks the unit to indicate whether it needs review. Adds an optional explanation as a note."""
+        """
+        Marks the unit to indicate whether it needs review. Adds an optional
+explanation as a note.
+        """
         if needsreview:
             reviewnote = "(review)"
             if explanation:
@@ -102,14 +105,16 @@ class pounit(base.TranslationUnit):
             notes = notestring.split('\n')
             newnotes = []
             for note in notes:
-                if not '(review)' in note:
+                if '(review)' not in note:
                     newnotes.append(note)
             newnotes = '\n'.join(newnotes)
             self.removenotes()
             self.addnote(newnotes, origin="translator")
 
     def istranslated(self):
-        return super(pounit, self).istranslated() and not self.isobsolete() and not self.isheader()
+        return (super(pounit, self).istranslated()
+                and not self.isobsolete()
+                and not self.isheader())
 
     def istranslatable(self):
         return not (self.isheader() or self.isblank() or self.isobsolete())
@@ -121,7 +126,9 @@ class pounit(base.TranslationUnit):
         return self.hasmarkedcomment("review") or self.hasmarkedcomment("pofilter")
 
     def isobsolete(self):
-        return self.STATE[self.S_FUZZY_OBSOLETE][0] <= self.get_state_n() < self.STATE[self.S_OBSOLETE][1]
+        return (self.STATE[self.S_FUZZY_OBSOLETE][0]
+                <= self.get_state_n()
+                < self.STATE[self.S_OBSOLETE][1])
 
     def isfuzzy(self):
         # implementation specific fuzzy detection, must not use get_state_n()
@@ -171,8 +178,12 @@ class pounit(base.TranslationUnit):
         else:
             has_target = bool(self.target)
         if has_target:
-            isfuzzy = self.STATE[self.S_FUZZY][0] <= value < self.STATE[self.S_FUZZY][1] or \
-                    self.STATE[self.S_FUZZY_OBSOLETE][0] <= value < self.STATE[self.S_FUZZY_OBSOLETE][1]
+            isfuzzy = ((self.STATE[self.S_FUZZY][0]
+                        <= value
+                        < self.STATE[self.S_FUZZY][1])
+                       or (self.STATE[self.S_FUZZY_OBSOLETE][0]
+                           <= value
+                           < self.STATE[self.S_FUZZY_OBSOLETE][1]))
             self._domarkfuzzy(isfuzzy)  # Implementation specific fuzzy-marking
         else:
             super(pounit, self).set_state_n(self.S_UNTRANSLATED)
@@ -196,7 +207,8 @@ def encodingToUse(encoding):
 
 class pofile(poheader.poheader, base.TranslationStore):
     Name = "Gettext PO file"  # pylint: disable=E0602
-    Mimetypes = ["text/x-gettext-catalog", "text/x-gettext-translation", "text/x-po", "text/x-pot"]
+    Mimetypes = ["text/x-gettext-catalog", "text/x-gettext-translation",
+                 "text/x-po", "text/x-pot"]
     Extensions = ["po", "pot"]
     # We don't want windows line endings on Windows:
     _binary = True

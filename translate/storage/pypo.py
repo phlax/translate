@@ -34,7 +34,7 @@ from translate.lang import data
 from translate.misc import quote
 from translate.misc.deprecation import deprecated
 from translate.misc.multistring import multistring
-from translate.storage import base, pocommon, poparser
+from translate.storage import pocommon, poparser
 from translate.storage.pocommon import encodingToUse
 
 
@@ -119,7 +119,11 @@ def extractpoline(line):
        Replaced by :func:`unescape`. :func:`extractpoline` is kept to allow
        tests of correctness, and in case of external users.
     """
-    extracted = quote.extractwithoutquotes(line, '"', '"', '\\', includeescapes=unescapehandler)[0]
+    extracted = quote.extractwithoutquotes(line,
+                                           '"',
+                                           '"',
+                                           '\\',
+                                           includeescapes=unescapehandler)[0]
     return extracted
 
 
@@ -294,14 +298,18 @@ class pounit(pocommon.pounit):
             if len(target) == 1:
                 target = target[0]
             else:
-                raise ValueError("po msgid element has no plural but msgstr has %d elements (%s)" % (len(target), target))
+                raise ValueError("po msgid element has no plural but msgstr "
+                                 "has %d elements (%s)" % (len(target),
+                                                           target))
         templates = self.msgstr
         if isinstance(templates, list):
             templates = {0: templates}
         if isinstance(target, list):
-            self.msgstr = dict([(i, quoteforpo(target[i])) for i in range(len(target))])
+            self.msgstr = dict([(i, quoteforpo(target[i]))
+                                for i in range(len(target))])
         elif isinstance(target, dict):
-            self.msgstr = dict([(i, quoteforpo(targetstring)) for i, targetstring in six.iteritems(target)])
+            self.msgstr = dict([(i, quoteforpo(targetstring))
+                                for i, targetstring in six.iteritems(target)])
         else:
             self.msgstr = quoteforpo(target)
     target = property(gettarget, settarget)
@@ -401,7 +409,9 @@ class pounit(pocommon.pounit):
 
     def _msgstrlen(self):
         if isinstance(self.msgstr, dict):
-            combinedstr = "\n".join(filter(None, [unquotefrompo(msgstr) for msgstr in six.itervalues(self.msgstr)]))
+            combinedstr = "\n".join(filter(None,
+                                           [unquotefrompo(msgstr)
+                                            for msgstr in six.itervalues(self.msgstr)]))
             return len(combinedstr)
         else:
             return len(unquotefrompo(self.msgstr))
@@ -414,7 +424,7 @@ class pounit(pocommon.pounit):
         """
 
         def mergelists(list1, list2, split=False):
-            #decode where necessary
+            # decode where necessary
             if unicode in [type(item) for item in list2] + [type(item) for item in list1]:
                 for position, item in enumerate(list1):
                     if isinstance(item, str):
@@ -423,7 +433,7 @@ class pounit(pocommon.pounit):
                     if isinstance(item, str):
                         list2[position] = item.decode("utf-8")
 
-            #Determine the newline style of list1
+            # Determine the newline style of list1
             lineend = ""
             if list1 and list1[0]:
                 for candidate in ["\n", "\r", "\n\r"]:
@@ -434,7 +444,7 @@ class pounit(pocommon.pounit):
             else:
                 lineend = "\n"
 
-            #Split if directed to do so:
+            # Split if directed to do so:
             if split:
                 splitlist1 = []
                 splitlist2 = []
@@ -445,9 +455,10 @@ class pounit(pocommon.pounit):
                 for item in list2:
                     splitlist2.extend(item.split()[1:])
                     prefix = item.split()[0]
-                list1.extend(["%s %s%s" % (prefix, item, lineend) for item in splitlist2 if not item in splitlist1])
+                list1.extend(["%s %s%s" % (prefix, item, lineend)
+                              for item in splitlist2 if item not in splitlist1])
             else:
-                #Normal merge, but conform to list1 newline style
+                # Normal merge, but conform to list1 newline style
                 if list1 != list2:
                     for item in list2:
                         if lineend:
@@ -471,7 +482,9 @@ class pounit(pocommon.pounit):
         if not self.istranslated() or overwrite:
             # Remove kde-style comments from the translation (if any).
             if self._extract_msgidcomments(otherpo.target):
-                otherpo.target = otherpo.target.replace('_: ' + otherpo._extract_msgidcomments() + '\n', '')
+                otherpo.target = otherpo.target.replace('_: '
+                                                        + otherpo._extract_msgidcomments()
+                                                        + '\n', '')
             self.target = otherpo.target
             if self.source != otherpo.source or self.getcontext() != otherpo.getcontext():
                 self.markfuzzy()
@@ -485,8 +498,10 @@ class pounit(pocommon.pounit):
                 self.markfuzzy()
 
     def isheader(self):
-        #return (self._msgidlen() == 0) and (self._msgstrlen() > 0) and (len(self.msgidcomments) == 0)
-        #rewritten here for performance:
+        # return (self._msgidlen() == 0)
+        # and (self._msgstrlen() > 0)
+        # and (len(self.msgidcomments) == 0)
+        # rewritten here for performance:
         return (is_null(self.msgid)
                         and not is_null(self.msgstr)
                         and self.msgidcomments == []
@@ -586,7 +601,9 @@ class pounit(pocommon.pounit):
         if isinstance(partlines, dict):
             partkeys = partlines.keys()
             partkeys.sort()
-            return "".join([self._getmsgpartstr("%s[%d]" % (partname, partkey), partlines[partkey], partcomments) for partkey in partkeys])
+            return "".join([self._getmsgpartstr("%s[%d]" % (partname, partkey),
+                                                partlines[partkey], partcomments)
+                            for partkey in partkeys])
         partstr = partname + " "
         partstartline = 0
         if len(partlines) > 0 and len(partcomments) == 0:
@@ -611,7 +628,7 @@ class pounit(pocommon.pounit):
                         comment = comment[len("_:"):]
                     if comment.endswith("\\n"):
                         comment = comment[:-len("\\n")]
-                    #Before we used to strip. Necessary in some cases?
+                    # Before we used to strip. Necessary in some cases?
                     combinedcomment.append(comment)
                 partcomments = quoteforpo("_:%s" % "".join(combinedcomment))
             # comments first, no blank leader line needed
@@ -659,9 +676,13 @@ class pounit(pocommon.pounit):
             add_prev_msgid_info(obsoletelines, prefix="#~|")
             if self.msgctxt:
                 obsoletelines.append(self._getmsgpartstr("#~ msgctxt", self.msgctxt))
-            obsoletelines.append(self._getmsgpartstr("#~ msgid", self.msgid, self.msgidcomments))
+            obsoletelines.append(self._getmsgpartstr("#~ msgid",
+                                                     self.msgid,
+                                                     self.msgidcomments))
             if self.msgid_plural or self.msgid_pluralcomments:
-                obsoletelines.append(self._getmsgpartstr("#~ msgid_plural", self.msgid_plural, self.msgid_pluralcomments))
+                obsoletelines.append(self._getmsgpartstr("#~ msgid_plural",
+                                                         self.msgid_plural,
+                                                         self.msgid_pluralcomments))
             obsoletelines.append(self._getmsgpartstr("#~ msgstr", self.msgstr))
             for index, obsoleteline in enumerate(obsoletelines):
                 # We need to account for a multiline msgid or msgstr here
@@ -680,9 +701,13 @@ class pounit(pocommon.pounit):
         add_prev_msgid_info(lines, prefix="#|")
         if self.msgctxt:
             lines.append(self._getmsgpartstr(u"msgctxt", self.msgctxt))
-        lines.append(self._getmsgpartstr(u"msgid", self.msgid, self.msgidcomments))
+        lines.append(self._getmsgpartstr(u"msgid",
+                                         self.msgid,
+                                         self.msgidcomments))
         if self.msgid_plural or self.msgid_pluralcomments:
-            lines.append(self._getmsgpartstr(u"msgid_plural", self.msgid_plural, self.msgid_pluralcomments))
+            lines.append(self._getmsgpartstr(u"msgid_plural",
+                                             self.msgid_plural,
+                                             self.msgid_pluralcomments))
         lines.append(self._getmsgpartstr(u"msgstr", self.msgstr))
         postr = u"".join(lines)
         return postr
@@ -828,13 +853,15 @@ class pofile(pocommon.pofile):
         self.units = uniqueunits
 
     def __str__(self):
-        """Convert to a string. Double check that unicode is handled somehow
-        here"""
+        """
+        Convert to a string.
+        Double check that unicode is handled somehow here
+        """
         output = self._getoutput()
         if isinstance(output, unicode):
             try:
                 return output.encode(getattr(self, "_encoding", "UTF-8"))
-            except UnicodeEncodeError as e:
+            except UnicodeEncodeError:
                 self.updateheader(add=True, Content_Type="text/plain; charset=UTF-8")
                 self._encoding = "UTF-8"
                 for unit in self.units:
@@ -850,7 +877,7 @@ class pofile(pocommon.pofile):
             unitsrc = unit._getoutput() + u"\n"
             lines.append(unitsrc)
         lines = u"".join(lines).rstrip()
-        #After the last pounit we will have \n\n and we only want to end in \n:
+        # After the last pounit we will have \n\n and we only want to end in \n:
         if lines:
             lines += u"\n"
         return lines
@@ -876,8 +903,9 @@ class pofile(pocommon.pofile):
                 try:
                     line = line.decode(self._encoding)
                 except UnicodeError as e:
-                    raise UnicodeError("Error decoding line with encoding %r: %s. Line is %r" %
-                                       (self._encoding, e, line))
+                    raise UnicodeError("Error decoding line with encoding "
+                                       "%r: %s. Line is %r" % (self._encoding,
+                                                               e, line))
             newlines.append(line)
         return newlines
 

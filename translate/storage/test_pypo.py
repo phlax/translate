@@ -100,8 +100,9 @@ class TestPYPOUnit(test_po.TestPOUnit):
         unit.target = multistring(["Boom", "Bome"])
         assert unit.target.strings == ["Boom", "Bome"]
         unit.target = "Boom"
-        # FIXME: currently assigning the target to the same as the first string won't change anything
-        # we need to verify that this is the desired behaviour...
+        # FIXME: currently assigning the target to the same as the first string
+        # won't change anything we need to verify that this is the desired
+        # behaviour...
         assert unit.target.strings == ["Boom"]
         unit.target = "Een Boom"
         assert unit.target.strings == ["Een Boom"]
@@ -211,7 +212,8 @@ class TestPYPOFile(test_po.TestPOFile):
 
     def test_duplicates_default(self):
         """checks that duplicates are ignored by default"""
-        posource = '#: source1\nmsgid "test me"\nmsgstr ""\n\n#: source2\nmsgid "test me"\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid "test me"\nmsgstr ""\n\n'
+                    '#: source2\nmsgid "test me"\nmsgstr ""\n')
         pofile = self.poparse(posource)
         assert len(pofile.units) == 1
         assert str(pofile.units[0]).count("source1") == 1
@@ -233,7 +235,8 @@ class TestPYPOFile(test_po.TestPOFile):
 
     def test_merge_duplicates_msgctxt(self):
         """checks that merging duplicates works for msgctxt"""
-        posource = '#: source1\nmsgid "test me"\nmsgstr ""\n\n#: source2\nmsgid "test me"\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid "test me"\nmsgstr ""\n\n'
+                    '#: source2\nmsgid "test me"\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("msgctxt")
         print(pofile)
@@ -243,7 +246,8 @@ class TestPYPOFile(test_po.TestPOFile):
 
     def test_merge_blanks(self):
         """checks that merging adds msgid_comments to blanks"""
-        posource = '#: source1\nmsgid ""\nmsgstr ""\n\n#: source2\nmsgid ""\nmsgstr ""\n'
+        posource = ('#: source1\nmsgid ""\nmsgstr ""\n\n'
+                    '#: source2\nmsgid ""\nmsgstr ""\n')
         pofile = self.poparse(posource, duplicatestyle="allow")
         pofile.removeduplicates("merge")
         assert len(pofile.units) == 2
@@ -255,12 +259,14 @@ class TestPYPOFile(test_po.TestPOFile):
     def test_output_str_unicode(self):
         """checks that we can str(element) which is in unicode"""
         posource = u'''#: nb\nmsgid "Norwegian Bokm\xe5l"\nmsgstr ""\n'''
-        pofile = self.StoreClass(wStringIO.StringIO(posource.encode("UTF-8")), encoding="UTF-8")
+        pofile = self.StoreClass(wStringIO.StringIO(posource.encode("UTF-8")),
+                                 encoding="UTF-8")
         assert len(pofile.units) == 1
         print(str(pofile))
         thepo = pofile.units[0]
         assert str(thepo) == posource.encode("UTF-8")
-        # extra test: what if we set the msgid to a unicode? this happens in prop2po etc
+        # extra test: what if we set the msgid to a unicode?
+        # this happens in prop2po etc
         thepo.source = u"Norwegian Bokm\xe5l"
         assert str(thepo) == posource.encode("UTF-8")
         # Now if we set the msgstr to Unicode
@@ -273,7 +279,8 @@ class TestPYPOFile(test_po.TestPOFile):
 
     def test_posections(self):
         """checks the content of all the expected sections of a PO message"""
-        posource = '# other comment\n#. automatic comment\n#: source comment\n#, fuzzy\nmsgid "One"\nmsgstr "Een"\n'
+        posource = ('# other comment\n#. automatic comment\n'
+                    '#: source comment\n#, fuzzy\nmsgid "One"\nmsgstr "Een"\n')
         pofile = self.poparse(posource)
         print(pofile)
         assert len(pofile.units) == 1

@@ -230,7 +230,7 @@ class pounit(pocommon.pounit):
         self.infer_state()
 
     def infer_state(self):
-        #FIXME: do obsolete
+        # FIXME: do obsolete
         if gpo.po_message_is_obsolete(self._gpo_message):
             if gpo.po_message_is_fuzzy(self._gpo_message):
                 self.set_state_n(self.STATE[self.S_FUZZY_OBSOLETE][0])
@@ -262,11 +262,13 @@ class pounit(pocommon.pounit):
                     return u""
             else:
                 return text
-        singular = remove_msgid_comments((gpo.po_message_msgid(self._gpo_message) or "").decode(self.CPO_ENC))
+        singular = remove_msgid_comments((gpo.po_message_msgid(self._gpo_message)
+                                          or "").decode(self.CPO_ENC))
         if singular:
             if self.hasplural():
                 multi = multistring(singular, self.CPO_ENC)
-                pluralform = (gpo.po_message_msgid_plural(self._gpo_message) or "").decode(self.CPO_ENC)
+                pluralform = (gpo.po_message_msgid_plural(self._gpo_message)
+                              or "").decode(self.CPO_ENC)
                 multi.strings.append(pluralform)
                 return multi
             else:
@@ -280,9 +282,11 @@ class pounit(pocommon.pounit):
         if isinstance(source, unicode):
             source = source.encode(self.CPO_ENC)
         if isinstance(source, list):
-            gpo.po_message_set_msgid(self._gpo_message, source[0].encode(self.CPO_ENC))
+            gpo.po_message_set_msgid(self._gpo_message,
+                                     source[0].encode(self.CPO_ENC))
             if len(source) > 1:
-                gpo.po_message_set_msgid_plural(self._gpo_message, source[1].encode(self.CPO_ENC))
+                gpo.po_message_set_msgid_plural(self._gpo_message,
+                                                source[1].encode(self.CPO_ENC))
         else:
             gpo.po_message_set_msgid(self._gpo_message, source)
             gpo.po_message_set_msgid_plural(self._gpo_message, None)
@@ -317,7 +321,8 @@ class pounit(pocommon.pounit):
             if len(target) == 1:
                 target = target[0]
             else:
-                raise ValueError("po msgid element has no plural but msgstr has %d elements (%s)" % (len(target), target))
+                raise ValueError("po msgid element has no plural but msgstr "
+                                 "has %d elements (%s)" % (len(target), target))
         # empty the previous list of messages
         # TODO: the "pypo" implementation does not remove the previous items of
         #   the target, if self.target == target (essentially: comparing only
@@ -440,20 +445,25 @@ class pounit(pocommon.pounit):
             super(pounit, self).merge(otherpo, overwrite, comments)
             return
         if comments:
-            self.addnote(otherpo.getnotes("translator"), origin="translator", position="merge")
+            self.addnote(otherpo.getnotes("translator"),
+                         origin="translator", position="merge")
             # FIXME mergelists(self.typecomments, otherpo.typecomments)
             if not authoritative:
                 # We don't bring across otherpo.automaticcomments as we consider ourself
                 # to be the the authority.  Same applies to otherpo.msgidcomments
-                self.addnote(otherpo.getnotes("developer"), origin="developer", position="merge")
+                self.addnote(otherpo.getnotes("developer"),
+                             origin="developer", position="merge")
                 self.msgidcomment = otherpo._extract_msgidcomments() or None
                 self.addlocations(otherpo.getlocations())
         if not self.istranslated() or overwrite:
             # Remove kde-style comments from the translation (if any).
             if self._extract_msgidcomments(otherpo.target):
-                otherpo.target = otherpo.target.replace('_: ' + otherpo._extract_msgidcomments() + '\n', '')
+                otherpo.target = otherpo.target.replace('_: '
+                                                        + otherpo._extract_msgidcomments()
+                                                        + '\n', '')
             self.target = otherpo.target
-            if self.source != otherpo.source or self.getcontext() != otherpo.getcontext():
+            if (self.source != otherpo.source
+                or self.getcontext() != otherpo.getcontext()):
                 self.markfuzzy()
             else:
                 self.markfuzzy(otherpo.isfuzzy())
@@ -465,7 +475,7 @@ class pounit(pocommon.pounit):
                 self.markfuzzy()
 
     def isheader(self):
-        #return self.source == u"" and self.target != u""
+        # return self.source == u"" and self.target != u""
         # we really want to make sure that there is no msgidcomment or msgctxt
         return self.getid() == "" and len(self.target) > 0
 
@@ -492,8 +502,9 @@ class pounit(pocommon.pounit):
         gpo.po_message_set_fuzzy(self._gpo_message, present)
 
     def makeobsolete(self):
-        # FIXME: libgettexpo currently does not reset other data, we probably want to do that
-        # but a better solution would be for libgettextpo to output correct data on serialisation
+        # FIXME: libgettexpo currently does not reset other data, we probably
+        # want to do that but a better solution would be for libgettextpo to
+        # output correct data on serialisation
         gpo.po_message_set_obsolete(self._gpo_message, True)
         self.infer_state()
 
@@ -511,7 +522,8 @@ class pounit(pocommon.pounit):
         :return: Returns the extracted msgidcomments found in this unit's msgid.
         """
         if not text:
-            text = (gpo.po_message_msgid(self._gpo_message) or "").decode(self.CPO_ENC)
+            text = (gpo.po_message_msgid(self._gpo_message)
+                    or "").decode(self.CPO_ENC)
         if text:
             return pocommon.extract_msgid_comment(text)
         return u""
@@ -575,7 +587,6 @@ class pounit(pocommon.pounit):
         elif isinstance(unit, pocommon.pounit):
             newunit = cls(unit.source, encoding)
             newunit.target = unit.target
-            #context
             newunit.msgidcomment = unit._extract_msgidcomments()
             context = unit.getcontext()
             if not newunit.msgidcomment and context:
@@ -615,7 +626,8 @@ class pofile(pocommon.pofile):
         self._encoding = 'utf-8'
         if inputfile is None:
             self._gpo_memory_file = gpo.po_file_create()
-            self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file, None)
+            self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file,
+                                                                 None)
             if not noheader:
                 self.init_headers()
         else:
@@ -630,13 +642,17 @@ class pofile(pocommon.pofile):
         header._store = self
         self.units.insert(0, header)
         gpo.po_message_iterator_free(self._gpo_message_iterator)
-        self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file, None)
+        self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file,
+                                                             None)
         gpo.po_message_insert(self._gpo_message_iterator, header._gpo_message)
         while gpo.po_next_message(self._gpo_message_iterator):
             pass
 
     def removeduplicates(self, duplicatestyle="merge"):
-        """make sure each msgid is unique ; merge comments etc from duplicates into original"""
+        """
+        make sure each msgid is unique
+        merge comments etc from duplicates into original
+        """
         # TODO: can we handle consecutive calls to removeduplicates()? What
         # about files already containing msgctxt? - test
         id_dict = {}
@@ -693,8 +709,8 @@ class pofile(pocommon.pofile):
     def __str__(self):
 
         def obsolete_workaround():
-            # Remove all items that are not output by msgmerge when a unit is obsolete.  This is a work
-            # around for bug in libgettextpo
+            # Remove all items that are not output by msgmerge when a unit is
+            # obsolete.  This is a work around for bug in libgettextpo
             # FIXME Do version test in case they fix this bug
             for unit in self.units:
                 if unit.isobsolete():
@@ -705,7 +721,8 @@ class pofile(pocommon.pofile):
                         location = gpo.po_message_filepos(unit._gpo_message, 0)
 
         def writefile(filename):
-            self._gpo_memory_file = gpo.po_file_write_v2(self._gpo_memory_file, filename, xerror_handler)
+            self._gpo_memory_file = gpo.po_file_write_v2(self._gpo_memory_file,
+                                                         filename, xerror_handler)
             with open(filename) as tfile:
                 return tfile.read()
 
@@ -775,7 +792,8 @@ class pofile(pocommon.pofile):
             if charset:
                 charset = re.search("charset=([^\\s]+)", charset).group(1)
             self._encoding = encodingToUse(charset)
-        self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file, None)
+        self._gpo_message_iterator = gpo.po_message_iterator(self._gpo_memory_file,
+                                                             None)
         newmessage = gpo.po_next_message(self._gpo_message_iterator)
         while newmessage:
             newunit = pounit(gpo_message=newmessage, encoding=self._encoding)
